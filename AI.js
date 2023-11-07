@@ -1,0 +1,9 @@
+class AI{
+    constructor(){
+        
+    }
+
+    predict(){
+
+    }
+}
