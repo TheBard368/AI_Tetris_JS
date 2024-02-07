@@ -1,4 +1,7 @@
 const unit=20;
+const cvs=document.getElementById("board");
+const ctx=cvs.getContext("2d");
+document.addEventListener("keydown", direction);
 
 class Game{
     constructor(boardname, humanControlled, tilesize){
@@ -36,7 +39,7 @@ class Game{
         // }
         //refreshPiecePosition();
         drawBoard();
-        updateMatrix();
+        //updateMatrix();
 
 
         //deletePiecePosition();
@@ -91,18 +94,13 @@ function direction(event){
                     window.alert("GAME OVER")
                 }, 100);
             }
-            if(schowek==0){
-                piece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
-            }
-            else{
-                piece = new Piece(4, -1, schowek.type);
-                schowek = 0;
-            }
+            piece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
+            
         }
     }
     drawBoard();
     //refreshPiecePosition();
-    updateMatrix();
+    //updateMatrix();
 }
 
 var down=[];
@@ -138,7 +136,7 @@ function addDown(){
     for(var i=0; i<4; i++){
         for(j=0; j<down.length && piece.type[piece.rotation][i].y+piece.y<down[j].y; j++);
 
-        board[piece.x + piece.type[piece.rotation][i].x][piece.y + piece.type[piece.rotation][i].y] = 2; //zaznaczanie pojawienie się nowego elementu na dole
+        //board[piece.x + piece.type[piece.rotation][i].x][piece.y + piece.type[piece.rotation][i].y] = 2; //zaznaczanie pojawienie się nowego elementu na dole
 
         pom=new Box(piece.type[piece.rotation][i].x+piece.x, piece.type[piece.rotation][i].y+piece.y, piece.type[piece.rotation][i].color);
         down.splice(j, 0, pom);
@@ -283,7 +281,7 @@ function play(){
     // }
     //refreshPiecePosition();
     drawBoard();
-    updateMatrix();
+    //updateMatrix();
 
 
     //deletePiecePosition();
@@ -298,13 +296,9 @@ function play(){
                 window.alert("GAME OVER")
             }, 100);
         }
-        if(schowek==0){
-            piece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
-        }
-        else{
-            piece = new Piece(4, -1, schowek.type);
-            schowek = 0;
-        }
+        
+        piece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
+        
     }
 }
 
