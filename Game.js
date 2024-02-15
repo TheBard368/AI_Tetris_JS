@@ -21,6 +21,7 @@ class Game{
     }
 
     generateNextPiece(){
+        this.rotation = 0;
         this.pieceCount++;
         this.piece = this.nextPiece;
         this.nextPiece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
@@ -29,11 +30,13 @@ class Game{
     swapPiece(){
         if(!this.piecesSwapped){
             var pom = this.piece;
+            this.rotation = 0;
             this.piece = this.nextPiece;
             this.nextPiece = pom;
             this.nextPiece.x = 4;
             this.nextPiece.y = -1;
             this.piecesSwapped = true;
+            drawGame(this);
         }
     }
 
@@ -284,9 +287,9 @@ class Game{
                 }
             }
 
-            drawGame(this);
-            return true;
         }
+        drawGame(this);
+        return true;
     }
 
     rotateR(){
@@ -462,10 +465,10 @@ class Game{
                 }
             }
 
-            drawGame(this);
-            return true;
         }
 
+        drawGame(this);
+        return true;
     }
 
 

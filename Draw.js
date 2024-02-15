@@ -30,25 +30,43 @@ function drawDown(down){
 
 function drawGame(game){
     ctx.save();
-    ctx.translate(unit*11*game.id, 0);
-    ctx.clearRect(0, 0, 11*unit, 20*unit);
+    ctx.translate(unit*11*game.Id, 0);
+    ctx.clearRect(0, 0, 10*unit, 20*unit);
 
     drawPiece(game.piece, game.rotation)
     drawDown(game.down);
 
+    drawGrid();
+    ctx.restore();
+}
+
+function drawGrid(){
     ctx.strokeStyle="black";
-    ctx.strokeRect(1, 1, 10*unit-2, 20*unit-2);
-    ctx.restore();
+    ctx.strokeRect(0, 0, 10*unit, 20*unit);
+
+    for(var i=1; i<10; i++){
+        ctx.beginPath();
+        ctx.moveTo(unit*i, 0);
+        ctx.lineTo(unit*i, 20*unit);
+        ctx.stroke();
+    }
+
+    for(var i=1; i<20; i++){
+        ctx.beginPath();
+        ctx.moveTo(0, unit*i);
+        ctx.lineTo(unit*10, unit*i);
+        ctx.stroke();
+    }
 }
 
-function drawGames(games){
-    ctx.clearRect(0, 0, 11*unit*games.length, 20*unit);
-    ctx.save();
+// function drawGames(games){
+//     ctx.clearRect(0, 0, 11*unit*games.length, 20*unit);
+//     ctx.save();
 
-    games.forEach(g => {
-        drawGame(g)
-        ctx.translate(unit*11, 0);
-    });
+//     games.forEach(g => {
+//         drawGame(g)
+//         ctx.translate(unit*11, 0);
+//     });
 
-    ctx.restore();
-}
+//     ctx.restore();
+// }

@@ -16,7 +16,7 @@ class Phenotype{
         if(this.pieceCount!=this.boardState.pieceCount){
             this.pieceCount = this.boardState.pieceCount;
             this.needsNewMovementPlan = true; 
-         }
+        }
     }
 
     mutate(){
@@ -36,7 +36,8 @@ class Phenotype{
                this.weights.bumpiness * matrix.bumpiness +
                this.weights.pillars * matrix.pillars +
                this.weights.totalPillarsHeight * matrix.totalPillarsHeight +
-               this.weights.height * matrix.height;
+               this.weights.height * matrix.height -
+               this.weights.tetrised * matrix.tetrised;
                //this.weights.currentScore * matrix.currentScore;
 
     }
@@ -75,9 +76,9 @@ class Phenotype{
                 game.movePieceDown();
                 break;
         }
-        if(this.movePlan.length() == 0){
-            console.log("move plan empty");
-        }
+        // if(this.movePlan.length() == 0){
+        //     console.log("move plan empty");
+        // }
     }
 
     calculteMoves(){
@@ -99,8 +100,8 @@ class Phenotype{
 
             this.movePlan = bestMove.moveHistory.clone();
 
-            //this.movePlan.addMoveDown(); //testowa
-            //this.bestPieceCopy = bestMove.clone();
+            // this.movePlan.addMoveDown(); //testowa
+            // this.bestPieceCopy = bestMove.clone();
             this.needsNewMovementPlan = false;
         }
     }
@@ -109,9 +110,11 @@ class Phenotype{
     findBestEndPosition(endPositions, matrix){
         var minCost = 1000000;
         var bestPiece;
+        var pomTab;
+        // var bestTab;
 
         for(var i=0; i<endPositions.length; i++){
-            var pomTab = matrix.clone();
+            pomTab = matrix.clone();
             pomTab.pushPieceIn(endPositions[i]);
             pomTab.countHolesAndChasms();
             pomTab.countPillars();
@@ -119,6 +122,7 @@ class Phenotype{
             if(minCost>this.getCostOfBoard(pomTab)){
                 minCost = this.getCostOfBoard(pomTab);
                 bestPiece = endPositions[i];
+                // bestTab = pomTab;
             }
         }
         return bestPiece;
@@ -202,7 +206,8 @@ class Phenotype{
             bumpiness: 100,
             pillars: 100,
             totalPillarsHeight: 100,
-            height: 100
+            height: 100,
+            tetrised: 100
             //currentScore: 100,
         }
     }
@@ -230,10 +235,11 @@ class Phenotype{
         this.weights = {
             holes: 180*random(0.90, 1.10),
             chasms: 120*random(0.90, 1.10),
-            bumpiness: 70*random(0.90, 1.10),
+            bumpiness: 90*random(0.90, 1.10),
             pillars: 70*random(0.90, 1.10),
-            totalPillarsHeight: 100*random(0.90, 1.10),
-            height: 500*random(0.90, 1.10)
+            totalPillarsHeight: 90*random(0.90, 1.10),
+            height: 200*random(0.90, 1.10),
+            tetrised: 120*random(0.90, 1.10)
             //currentScore: 100,
         }
     }
@@ -279,7 +285,10 @@ class Popultaion{
 
         var best = this.findBest();
 
-        for(var i=0; i<this.popCount; i++){
+        best.mutate();
+        newGen.push(best);
+
+        for(var i=1; i<this.popCount; i++){
             newGen.push(Phenotype.createChild(best, this.phenotypes[i])); //wstępne krzyżowanie
         }
 
@@ -287,17 +296,6 @@ class Popultaion{
         this.generation++;
     }
 
-    // calculteMoves(games){
-    //     for(var i=0; i<this.popCount; i++){
-    //         if(!this.phenotypes[i].gameEnded){
-    //             this.phenotypes[i].updateMatrix(games[i]);
-    //             this.phenotypes[i].calculteMoves(this.phenotypes[i].boardState.currentPiece,
-    //                                              this.phenotypes[i].boardState.nextPiece,
-    //                                              this.phenotypes[i].boardState);
-                
-    //         }
-    //     }
-    // }
 
     useMoves(games){
         for(var i=0; i<this.popCount; i++){

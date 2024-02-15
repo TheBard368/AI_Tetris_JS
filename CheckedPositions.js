@@ -15,7 +15,7 @@ class CheckedPositions{
 
     setAllToFalse(){
         this.checkedPositions = [];
-        for (let i = 0; i < 800; i++) {
+        for (let i = 0; i < 840; i++) {
             this.checkedPositions.push(false);
         }
     }

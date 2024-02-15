@@ -1,10 +1,10 @@
-const popCount = 1;
+const popCount = 6;
 var games = [];
 var population;
 var learning;
 
 function setUp(){
-    population = new Popultaion(popCount);
+    population = new Popultaion(popCount, 10);
     for(var i=0; i<popCount; i++){
         games.push(new Game(i, false));
         drawGame(games[i]);
@@ -80,9 +80,3 @@ function direction(event){
 setUp();
 games.forEach(g => g.start(0));
 var learning = setTimeout(learn, 0);
-
-// learn();
-
-// var game = new Game(true);
-
-// game.start(0);

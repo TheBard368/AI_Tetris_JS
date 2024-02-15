@@ -36,6 +36,7 @@ class BoardState{
         this.gameDead = false;
         this.currentPiece = null;
         this.nextPiece = null;
+        this.tetrised = 0; // 0 - nie bylo tetrisa, 1 - byl tetris
         
     }
 
@@ -94,6 +95,8 @@ class BoardState{
                 linesCleared++;
             }
         }
+
+        if(linesCleared == 4) this.tetrised = 1;
     }
 
     //revizja
@@ -213,8 +216,8 @@ class BoardState{
         for(var i = 0; i < 10; i++){
             for(j = 0; j<20 && this.analizingMatrix[j][i]==0; j++);
 
-            if(i != prevHeight){
-                this.bumpiness++;
+            if(j != prevHeight){
+                this.bumpiness += Math.abs(i-prevHeight);
                 prevHeight = j;
             }
             
@@ -225,7 +228,7 @@ class BoardState{
 
         for(var i=0; i<4; i++){
 
-            if(piece.y + piece.type[piece.rotation][i].y >= 20 || piece.x + piece.type[piece.rotation][i].x < 0 || piece.x + piece.type[piece.rotation][i].x >= 10) return false;
+            if(piece.y + piece.type[piece.rotation][i].y > 19 || piece.x + piece.type[piece.rotation][i].x < 0 || piece.x + piece.type[piece.rotation][i].x > 9) return false;
 
             if(piece.y + piece.type[piece.rotation][i].y >= 0 && this.analizingMatrix[piece.y + piece.type[piece.rotation][i].y][piece.x + piece.type[piece.rotation][i].x] != 0){
                 return false;
