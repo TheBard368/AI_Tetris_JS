@@ -29,10 +29,18 @@ class MoveHistory{
 
     clone(){
         var copy = new MoveHistory();
-        this.moveList.forEach(m => {
-            copy.moveList.push(m);
-        });
+        for(var i = 0; i<this.moveList.length; i++){
+            copy.moveList.push("" + this.moveList[i]);
+        }
 
         return copy;
+    }
+
+    getMove(){
+        return this.moveList.splice(0, 1)[0];
+    }
+
+    length(){
+        return this.moveList.length;
     }
 }

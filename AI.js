@@ -1,67 +1,171 @@
 class Phenotype{
     constructor(){
-        this.setStartingWeights();
+        //this.setStartingWeights();
+        this.randomizeWeights();
 
         this.movePlan = new MoveHistory();
+        this.needsNewMovementPlan = true;
         this.gameEnded = false;
         this.boardState = new BoardState();
+        this.pieceCount = 0;
+    }
+
+    updateBoardState(game){
+        this.boardState.updateMatrix(game);
+        this.gameEnded = this.boardState.gameDead;
+        if(this.pieceCount!=this.boardState.pieceCount){
+            this.pieceCount = this.boardState.pieceCount;
+            this.needsNewMovementPlan = true; 
+         }
     }
 
     mutate(){
         var mutationRate = 0.1;
-        this.weights.holes *= random(1.0) < mutationRate ? random(0.95, 1.05) : 1;
-        this.weights.chasms *= random(1.0) < mutationRate ? random(0.95, 1.05) : 1;
-        this.weights.bumpiness *= random(1.0) < mutationRate ? random(0.95, 1.05) : 1;
-        this.weights.pillars *= random(1.0) < mutationRate ? random(0.95, 1.05) : 1;
-        this.weights.totalPillarsHeight *= random(1.0) < mutationRate ? random(0.95, 1.05) : 1;
-        this.weights.currentScore *= random(1.0) < mutationRate ? random(0.95, 1.05) : 1;
+        this.weights.holes *= Math.random(1.0) < mutationRate ? random(0.90, 1.10) : 1;
+        this.weights.chasms *= Math.random(1.0) < mutationRate ? random(0.90, 1.10) : 1;
+        this.weights.bumpiness *= Math.random(1.0) < mutationRate ? random(0.90, 1.10) : 1;
+        this.weights.pillars *= Math.random(1.0) < mutationRate ? random(0.90, 1.10) : 1;
+        this.weights.totalPillarsHeight *= Math.random(1.0) < mutationRate ? random(0.90, 1.10) : 1;
+        //this.weights.currentScore *= random(1.0) < mutationRate ? random(0.95, 1.05) : 1;
 
     }
 
-    getCostOfBoard(analizesMatrix){
-        return this.weights.holes * analizesMatrix.holes +
-               this.weights.chasms * analizesMatrix.chasms +
-               this.weights.bumpiness * analizesMatrix.bumpiness +
-               this.weights.pillars * analizesMatrix.pillars +
-               this.weights.totalPillarsHeight * analizesMatrix.totalPillarsHeight +
-               this.weights.currentScore * analizesMatrix.currentScore;
+    getCostOfBoard(matrix){
+        return this.weights.holes * matrix.holes +
+               this.weights.chasms * matrix.chasms +
+               this.weights.bumpiness * matrix.bumpiness +
+               this.weights.pillars * matrix.pillars +
+               this.weights.totalPillarsHeight * matrix.totalPillarsHeight +
+               this.weights.height * matrix.height;
+               //this.weights.currentScore * matrix.currentScore;
 
     }
 
-    calculteMoves(currentPiece, nextPiece, analizesMatrix){
-        if(this.movePlan.moveList.length != 0){
-            var pomTab = analizesMatrix.clone();
-            var copyCurrent = new PieceVM(currentPiece.x, currentPiece.y, currentPiece.type);
-            var copyNext = new PieceVM(nextPiece.x, nextPiece.y, nextPiece.type)
-            
-            var bestEndPositionForCurrent = this.findBestPositions(copyCurrent, pomTab);
-            var bestEndPositionForNext = [];
-            if(currentPiece.type != nextPiece.type)bestEndPositionForNext = this.findBestPositions(copyNext, pomTab);
-            
+    move(game){
+
+        this.updateBoardState(game);
+        if(this.gameEnded){
+            return;
         }
+        
+        if(this.needsNewMovementPlan==true && this.movePlan.length()!=0){
+            console.log("niewyrobilem sie");
+        }
+        this.calculteMoves();
+
+        var nextMove = this.movePlan.getMove();
+
+        switch(nextMove) {
+            case "swap":
+                game.swapPiece();
+                break;
+            case "rotateR":
+                game.rotateR();
+                break;
+            case "rotateL":
+                game.rotateL();
+                break;
+            case "right":
+                game.movePieceRight();
+                break;
+            case "left":
+                game.movePieceLeft();
+                break;
+            case "down":
+                game.movePieceDown();
+                break;
+        }
+        if(this.movePlan.length() == 0){
+            console.log("move plan empty");
+        }
+    }
+
+    calculteMoves(){
+        if(this.needsNewMovementPlan){
+            var pomTab = this.boardState.clone();
+            var copyCurrent = new PieceVM(pomTab.currentPiece.x, pomTab.currentPiece.y, pomTab.currentPiece.type);
+            var copyNext = new PieceVM(pomTab.nextPiece.x, pomTab.nextPiece.y, pomTab.nextPiece.type)
+            copyNext.moveHistory.addSwap();
+            
+            var endPositionForCurrent = this.findShortestsPaths(copyCurrent, pomTab);
+            var endPositionForNext = [];
+            if(copyCurrent.type != copyNext.type)endPositionForNext = this.findShortestsPaths(copyNext, pomTab);
+
+            var endPositions = [...endPositionForCurrent, ...endPositionForNext];
+
+            var bestMove = this.findBestEndPosition(endPositions, pomTab);
+
+
+
+            this.movePlan = bestMove.moveHistory.clone();
+
+            //this.movePlan.addMoveDown(); //testowa
+            //this.bestPieceCopy = bestMove.clone();
+            this.needsNewMovementPlan = false;
+        }
+    }
+
+
+    findBestEndPosition(endPositions, matrix){
+        var minCost = 1000000;
+        var bestPiece;
+
+        for(var i=0; i<endPositions.length; i++){
+            var pomTab = matrix.clone();
+            pomTab.pushPieceIn(endPositions[i]);
+            pomTab.countHolesAndChasms();
+            pomTab.countPillars();
+            pomTab.checkBumpiness();
+            if(minCost>this.getCostOfBoard(pomTab)){
+                minCost = this.getCostOfBoard(pomTab);
+                bestPiece = endPositions[i];
+            }
+        }
+        return bestPiece;
     }
 
     findShortestsPaths(piece, matrix){
         var counter = 0;
         var endPositions = [];
         var checkedPositions = new CheckedPositions(matrix);
-        var checkInDirection = (queue, piece, x, y, r) => {
-            if (r) {
-                if (shape.canRotateShape(true, blockMatrix)) {
-                    var pieceRotated = piece.clone();
-                    pieceRotated.rotateShape(true,blockMatrix);
-
-                    if (!checkedPositions.hasShapesPositionBeenChecked(rotatedShape)) {
-                        checkedPositions.setCheckedPositionsArrayValueAtShapesPosition(rotatedShape, true);
-                        queue.push(rotatedShape);
+        var checkDirection = (queue, piece, moveDirection, rotate) => {
+            var tmpPiece = piece.clone();
+            switch(rotate){
+                case 1 :
+                    if(tmpPiece.rotateR(matrix) && !checkedPositions.hasPositionBeenChecked(tmpPiece.x, tmpPiece.y, tmpPiece.rotation)){
+                        checkedPositions.setCheckedPositionsArrayValue(tmpPiece.x, tmpPiece.y, tmpPiece.rotation, true);
+                        queue.push(tmpPiece);
                     }
-                }
-            } else {
-                if (shape.canMoveInDirection(x, y, blockMatrix)) {
-                    var movedShape = shape.clone();
-                    movedShape.moveShape(x, y,blockMatrix);
+                    break;
+                case -1 :
+                    if(tmpPiece.rotateL(matrix) && !checkedPositions.hasPositionBeenChecked(tmpPiece.x, tmpPiece.y, tmpPiece.rotation)){
+                        checkedPositions.setCheckedPositionsArrayValue(tmpPiece.x, tmpPiece.y, tmpPiece.rotation, true);
+                        queue.push(tmpPiece);
+                    }
+                    break;
+                default :
+                    switch(moveDirection){
+                    case 1 :
+                        if(tmpPiece.moveRight(matrix) && !checkedPositions.hasPositionBeenChecked(tmpPiece.x, tmpPiece.y, tmpPiece.rotation)){
+                            checkedPositions.setCheckedPositionsArrayValue(tmpPiece.x, tmpPiece.y, tmpPiece.rotation, true);
+                            queue.push(tmpPiece);
+                        }
+                        break;
+                    case -1 :
+                        if(tmpPiece.moveLeft(matrix) && !checkedPositions.hasPositionBeenChecked(tmpPiece.x, tmpPiece.y, tmpPiece.rotation)){
+                            checkedPositions.setCheckedPositionsArrayValue(tmpPiece.x, tmpPiece.y, tmpPiece.rotation, true);
+                            queue.push(tmpPiece);
+                        }
+                        break;
+                    default :
+                    if(tmpPiece.moveDown(matrix) && !checkedPositions.hasPositionBeenChecked(tmpPiece.x, tmpPiece.y, tmpPiece.rotation)){
+                        checkedPositions.setCheckedPositionsArrayValue(tmpPiece.x, tmpPiece.y, tmpPiece.rotation, true);
+                        queue.push(tmpPiece);
+                    }
+                    break;
+                    }
+                break;
 
-                }
             }
         };
 
@@ -71,27 +175,25 @@ class Phenotype{
         while (queue.length > 0) {
 
             counter++;
-            //grab a shape off the front of the queue
-            var shape = queue.splice(0, 1)[0];
 
-            //if the shape cannot move down then it is a possible end position
-            if (!shape.canMoveDown(blockMatrix)) {
-                endPositions.push(shape.clone());
+            var pomPiece = queue.splice(0, 1)[0];
+
+            
+            if (!pomPiece.canMoveDown(matrix)) {
+                endPositions.push(pomPiece.clone());
             }
 
-            //check if you can move this shape in each way, if you can move it then add it to the back of the queue
-
-            checkInDirection(queue, shape, -1, 0);//check left
-            checkInDirection(queue, shape, 1, 0);//check right
-            checkInDirection(queue, shape, 0, 0, 1);//check rotation
-            checkInDirection(queue, shape, 0, 1);//check down
+            
+            checkDirection(queue, pomPiece, -1, 0);//sprawdz lewo
+            checkDirection(queue, pomPiece, 1, 0);//sprawdz prawo
+            checkDirection(queue, pomPiece, 0, -1);//sprwdz obrod w lewo
+            checkDirection(queue, pomPiece, 0, 1);//sprwdz obrod w prawo
+            checkDirection(queue, pomPiece);//check down
         }
 
         return endPositions;
 
     }
-
-    
 
     setStartingWeights(){
         this.weights = {
@@ -100,7 +202,8 @@ class Phenotype{
             bumpiness: 100,
             pillars: 100,
             totalPillarsHeight: 100,
-            currentScore: 100,
+            height: 100
+            //currentScore: 100,
         }
     }
 
@@ -123,47 +226,85 @@ class Phenotype{
         return child;
     }
 
-    // randomizeWeights(){
-
-    // }
+    randomizeWeights(){
+        this.weights = {
+            holes: 180*random(0.90, 1.10),
+            chasms: 120*random(0.90, 1.10),
+            bumpiness: 70*random(0.90, 1.10),
+            pillars: 70*random(0.90, 1.10),
+            totalPillarsHeight: 100*random(0.90, 1.10),
+            height: 500*random(0.90, 1.10)
+            //currentScore: 100,
+        }
+    }
 
 }
 
 //klasa trzymająca i zarządzająca populacjami
 class Popultaion{
-    constructor(popCount, prevPop){
-        this.generation = 0
+    constructor(popCount, finalGen){
+        this.finalGen = finalGen;
+        this.generation = 0;
         this.popCount = popCount;
-        this.phenotypes = [];
-        this.createPop(prevPop);
+        this.createPop();
     }
 
-    // createPop(prevPop){
-    //     for(var i=0; i<this.popCount; i++){
-    //         this.phenotypes.push(new Phenotype());
-    //     }
+    createPop(){
+        this.phenotypes = [];
+        for(var i=0; i<this.popCount; i++){
+            this.phenotypes.push(new Phenotype());
+        }
+    }
 
-    //     for(var i=0; i<prevPop.popCount; i++){
-    //         prevPop().phenotypes.pop(); 
-    //     }
+    // savePop(){
+
     // }
 
-    savePop(){
+    findBest(){
+        var maxFit = -1;
+        var best;
 
+        for(var i=0; i<this.popCount; i++){
+            if(this.phenotypes[i].getFittnes() > maxFit){
+                maxFit = this.phenotypes[i].getFittnes();
+                best = this.phenotypes[i];
+            }
+        }
+
+        return best;
     }
 
     selection(){
-        var newGen = []
+        var newGen = [];
 
-        for(var i=0; i<this.phenotypes.length/2; i++){
-            newGen.push(Phenotype.createChild(this.phenotypes[i], this.phenotypes[this.phenotypes.length-i])); //wstępne krzyżowanie
+        var best = this.findBest();
+
+        for(var i=0; i<this.popCount; i++){
+            newGen.push(Phenotype.createChild(best, this.phenotypes[i])); //wstępne krzyżowanie
         }
 
         this.phenotypes = newGen;
         this.generation++;
     }
 
-    
+    // calculteMoves(games){
+    //     for(var i=0; i<this.popCount; i++){
+    //         if(!this.phenotypes[i].gameEnded){
+    //             this.phenotypes[i].updateMatrix(games[i]);
+    //             this.phenotypes[i].calculteMoves(this.phenotypes[i].boardState.currentPiece,
+    //                                              this.phenotypes[i].boardState.nextPiece,
+    //                                              this.phenotypes[i].boardState);
+                
+    //         }
+    //     }
+    // }
+
+    useMoves(games){
+        for(var i=0; i<this.popCount; i++){
+            this.phenotypes[i].move(games[i]);
+        }
+    }
+   
 
     getTotalFittnes(){
         var totalFittnes = 0;
@@ -171,6 +312,25 @@ class Popultaion{
 
 
         return totalFittnes;
+    }
+
+    isDead(id){
+        return this.phenotypes[i].gameDead;
+    }
+
+    needsMoveList(){
+        return this.phenotypes[i].needsMoveList;
+    }
+
+    allDead(){
+        var deadCount = 0;
+        for(var i=0; i<this.popCount; i++){
+            if(this.phenotypes[i].boardState.gameDead){
+                deadCount++;
+            }
+        }
+        if(deadCount == this.popCount) return true;
+        return false;
     }
 
     
@@ -183,4 +343,8 @@ function choseRandom(a, b){
     else{
         return b;
     }
+}
+
+function random(a, b){
+    return Math.floor(Math.random()*((a-b+1)+a)*10000)/10000;
 }

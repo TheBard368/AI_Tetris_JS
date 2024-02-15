@@ -22,7 +22,7 @@ class BoardState{
                                 [0,0,0,0,0,0,0,0,0,0],
                                 [0,0,0,0,0,0,0,0,0,0],
                                 [0,0,0,0,0,0,0,0,0,0]];
-        
+        this.pieceCount = 0;
         this.holes = 0;
         this.chasms = 0;
         this.bumpiness = 0;
@@ -33,6 +33,9 @@ class BoardState{
         this.currentScore = 0;
         this.currentLevel = 0;
         this.pieceHeight = 0;
+        this.gameDead = false;
+        this.currentPiece = null;
+        this.nextPiece = null;
         
     }
 
@@ -44,6 +47,9 @@ class BoardState{
                 copy.analizingMatrix[i][j] = this.analizingMatrix[i][j];
             }
         }
+
+        copy.currentPiece = this.currentPiece.clone();
+        copy.nextPiece = this.nextPiece.clone();
 
         return copy;
     }
@@ -58,48 +64,63 @@ class BoardState{
     //     }
     //     return copy;
     // }
-
      
-    //do rewizji
-    updateMatrix(tetro, game){
+
+    pushPieceIn(piece){
+        for(var i=0; i<4; i++){
+            if(piece.y + piece.type[piece.rotation][i].y>=0){
+                this.analizingMatrix[piece.y + piece.type[piece.rotation][i].y][piece.x + piece.type[piece.rotation][i].x] = 1;
+            }
+        }
+        this.areThereClearedLines();
+    }
+
+    areThereClearedLines(){
+        var linesCleared = 0;
+        for(var i=0; i<20; i++){
+            var count = 0;
+            for(var j=0; j<10; j++){
+                if(this.analizingMatrix[i][j]!=0){
+                    count++;
+                }
+
+                //przesuwanie lini w dol
+                if(i>0){
+                    this.analizingMatrix[i][j] = this.analizingMatrix[i-linesCleared][j];
+                }
+            }
+
+            if(count == 10){
+                linesCleared++;
+            }
+        }
+    }
+
+    //revizja
+    updateMatrix(game){
         for(var i=0; i<this.analizingMatrix.length; i++){
             for(var j=0; j<this.analizingMatrix[i].length; j++){
                 this.analizingMatrix[i][j] = 0;
             }
         }
 
-        for(var i=0; i<down.length; i++){
-            this.analizingMatrix[game.down[i].y][game.down[i].x] = 1;
-        }
-
-        for(var i=0; i<4; i++){
-            if(piece.y + piece.type[tetro.rotation][i].y > 0){
-                this.analizingMatrix[tetro.y + tetro.type[tetro.rotation][i].y][tetro.x + tetro.type[tetro.rotation][i].x] = 2;
+        for(var i=0; i<game.down.length; i++){
+            if(game.down[i].y>=0){
+                this.analizingMatrix[game.down[i].y][game.down[i].x] = 1;
+            }else{
+                this.gameDead = true;
             }
         }
 
-        this.currentScore = game.score;
-        this.currentLevel = game.level;
+        if(this.pieceCount != game.pieceCount){
+            this.currentPiece = game.piece.clone();
+            this.nextPiece = game.nextPiece.clone();
+
+            this.currentScore = game.score;
+            this.currentLevel = game.level;
+            this.pieceCount = game.pieceCount;
+        }
     }
-
-    //revizja
-    // updateMatrix(game){
-    //     for(var i=0; i<this.analizingMatrix.length; i++){
-    //         for(var j=0; j<this.analizingMatrix[i].length; j++){
-    //             this.analizingMatrix[i][j] = 0;
-    //         }
-    //     }
-
-    //     for(var i=0; i<down.length; i++){
-    //         this.analizingMatrix[game.down[i].y][game.down[i].x] = 1;
-    //     }
-
-    //     this.currentPiece = game.piece.clone();
-    //     this.nextPiece = game.nextPiece.clone();
-
-    //     this.currentScore = game.score;
-    //     this.currentLevel = game.level;
-    // }
 
     //funkcja ma na celu odswierzenie polozenia bloku w tablicy do analizy dla ai
     // function refreshPiecePosition(){ 
@@ -128,7 +149,7 @@ class BoardState{
             var foundBlock = false;
             var foundBlocksCount = 0;
             for(var j=0; j<20; j++){
-                if(this.analizingMatrix[i][j] != 0){
+                if(this.analizingMatrix[j][i] != 0){
                     foundBlock = true;
                     foundBlocksCount++;
                 }else if(foundBlock){ 
@@ -137,7 +158,7 @@ class BoardState{
                     //sprawdzamy czy dziure mozna zapełnić klockiem przez jego przesuniecie w lewo lub w prawo
                     if (i < 8) {
                         //sprawdzenie prawej
-                        if ((this.analizingMatrix[i + 1][j] == 0 && this.analizingMatrix[i + 2][j] == 0) &&
+                        if ((this.analizingMatrix[j][i + 1] == 0 && this.analizingMatrix[j][i + 2] == 0) &&
                             (j == 19 || this.analizingMatrix[i+1][j+1] != 0 )) {
                             this.chasms++
                             continue;
@@ -147,7 +168,7 @@ class BoardState{
 
                     if (i >= 2) {
                         //sprawdzenie lewej
-                        if ((this.analizingMatrix[i - 1][j] === null && this.analizingMatrix[i - 2][j] == 0) &&
+                        if ((this.analizingMatrix[j][i - 1] === null && this.analizingMatrix[j][i - 2] == 0) &&
                             (j == 19 || this.analizingMatrix[i-1][j+1] != 0 )){ 
                             this.chasms++
                             continue;
@@ -166,49 +187,56 @@ class BoardState{
         this.height = 0;
 
         var j, prevHeight;
-        for(j = 0; this.analizingMatrix[j][0]==1 && j<20; j++);
-        prevHeight = i;
+        for(j = 0; j<20 && this.analizingMatrix[j][0]==0; j++);
+        prevHeight = j;
     
 
         for(var i = 0; i < 10; i++){
-            for(j = 0; this.analizingMatrix[j][0]==1 && j<20; j++)
+            for(j = 0; j<20 && this.analizingMatrix[j][i]==0; j++);
 
-            if(Math.abs(prevHeight-i) > 2){
+            if(Math.abs(prevHeight-j) > 2){
                 this.pillars++
-                this.totalPillarsHeight += i;
+                this.totalPillarsHeight += 20-j;
             }
-            if(this.height < i) this.height = i;
-            prevHeight = i;
+            if(this.height < j) this.height = 20-j;
+            prevHeight = j;
         }
     }
 
-    checkBumpines(){
+    checkBumpiness(){
         this.bumpiness = 0;
         var j, prevHeight;
-        for(j = 0; this.analizingMatrix[j][0]==1 && j<20; j++);
-        prevHeight = i;
+        for(j = 0; j<20 && this.analizingMatrix[j][0]==0; j++);
+        prevHeight = j;
     
 
         for(var i = 0; i < 10; i++){
-            for(j = 0; this.analizingMatrix[j][0]==1 && j<20; j++)
+            for(j = 0; j<20 && this.analizingMatrix[j][i]==0; j++);
 
             if(i != prevHeight){
-                this.bumpiness += Math.abs(prevHeight-i);
-                prevHeight = i;
+                this.bumpiness++;
+                prevHeight = j;
             }
             
         }
     }
     //sprawdza legalnosc ruchu
     isPieceLegal(piece){
+
         for(var i=0; i<4; i++){
-            if(piece.y + piece.type[tetro.rotation][i].y != 0){
+
+            if(piece.y + piece.type[piece.rotation][i].y >= 20 || piece.x + piece.type[piece.rotation][i].x < 0 || piece.x + piece.type[piece.rotation][i].x >= 10) return false;
+
+            if(piece.y + piece.type[piece.rotation][i].y >= 0 && this.analizingMatrix[piece.y + piece.type[piece.rotation][i].y][piece.x + piece.type[piece.rotation][i].x] != 0){
                 return false;
             }
+            
         }
 
         return true;
     }
+
+    cost
 }
 
 

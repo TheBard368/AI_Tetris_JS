@@ -1,31 +1,34 @@
 class Game{
-    constructor(boardname, humanControlled, tilesize){
-        this.cvs=document.getElementById(boardname);
-        this.ctx=this.cvs.getContext("2d");
+    constructor(id, humanControlled){
+        // this.cvs=document.getElementById(boardname);
+        // this.ctx=this.cvs.getContext("2d");
         if(humanControlled){
             document.addEventListener("keydown", direction);
         }
+        this.Id = id;
         this.score = 0;
         this.level = 0;
         this.droppingSpeed = 800;
         this.amoutOfLinesCleared = 0;
-        this.unit = tilesize;
         this.down=[];
         this.piece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
         this.nextPiece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
         this.piecesSwapped = false;
         this.rotation = 0;
+        this.gameDead = false;
+        this.pieceCount = 1;
         //this.analizesMatrix = new BoardState();
     }
 
     generateNextPiece(){
+        this.pieceCount++;
         this.piece = this.nextPiece;
         this.nextPiece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
     }
 
     swapPiece(){
         if(!this.piecesSwapped){
-            pom = this.piece;
+            var pom = this.piece;
             this.piece = this.nextPiece;
             this.nextPiece = pom;
             this.nextPiece.x = 4;
@@ -36,15 +39,36 @@ class Game{
 
     start(level){
         this.level = level;
-        this.game = setInterval(this.play.bind(this),this.droppingSpeed);
+        this.game = setTimeout(this.play.bind(this), this.droppingSpeed);
     }
 
+
     play(){
-        this.drawBoard();
-        //this.analizesMatrix.updateMatrix();
+        if(this.gameDead) return;
 
+        this.movePieceDown();
+        if(this.gameDead) return;
 
-        //deletePiecePosition();
+        this.game = setTimeout(this.play.bind(this), this.droppingSpeed);
+    }
+
+    reset(){
+        this.score = 0;
+        this.level = 0;
+        this.droppingSpeed = 800;
+        this.amoutOfLinesCleared = 0;
+        this.down=[];
+        this.piece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
+        this.nextPiece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
+        this.piecesSwapped = false;
+        this.rotation = 0;
+        this.gameDead = false;
+        this.pieceCount = 1;
+
+        this.game = setTimeout(this.play.bind(this), this.droppingSpeed);
+    }
+
+    movePieceDown(){
         this.piece.y++;
         if(this.collisioncheck()){
             this.piece.y--;
@@ -52,14 +76,40 @@ class Game{
             this.removeLine();
             if(this.end()){
                 this.gameOver();
+                return;
             }
             if(this.piecesSwapped){
                 this.piecesSwapped = false;
             }
 
             this.generateNextPiece();
+           
         }
+        drawGame(this);
     }
+
+    movePieceLeft(){
+        this.piece.x--;
+        if(this.collisioncheck()){
+            this.piece.x++;
+            return false;
+        }
+
+        drawGame(this);
+        return true;
+    }
+
+    movePieceRight(){
+        this.piece.x++;
+        if(this.collisioncheck()){
+            this.piece.x--;
+            return false;
+        }
+
+        drawGame(this);
+        return true;
+    }
+
 
     rotateL(){
         var prevRotation = this.rotation;
@@ -83,6 +133,7 @@ class Game{
                                         this.piece.x--;
                                         this.piece.y-=2;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -101,6 +152,7 @@ class Game{
                                         this.piece.x--;
                                         this.piece.y+=2;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -119,6 +171,7 @@ class Game{
                                         this.piece.x++;
                                         this.piece.y-=2;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -137,6 +190,7 @@ class Game{
                                         this.piece.x++;
                                         this.piece.y+=2;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -161,6 +215,7 @@ class Game{
                                         this.piece.x-=2;
                                         this.piece.y++;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -180,6 +235,7 @@ class Game{
                                         this.piece.x--;
                                         this.piece.y-=2;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -199,6 +255,7 @@ class Game{
                                         this.piece.x+=2;
                                         this.piece.y--;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -218,6 +275,7 @@ class Game{
                                         this.piece.x--;
                                         this.piece.y+=2;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -225,6 +283,9 @@ class Game{
                         break;
                 }
             }
+
+            drawGame(this);
+            return true;
         }
     }
 
@@ -250,6 +311,7 @@ class Game{
                                         this.piece.x++;
                                         this.piece.y-=2;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -268,6 +330,7 @@ class Game{
                                         this.piece.x--;
                                         this.piece.y+=2;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -286,6 +349,7 @@ class Game{
                                         this.piece.x--;
                                         this.piece.y-=2;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -304,6 +368,7 @@ class Game{
                                         this.piece.x++;
                                         this.piece.y+=2;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -328,6 +393,7 @@ class Game{
                                         this.piece.x--;
                                         this.piece.y+=2;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -347,6 +413,7 @@ class Game{
                                         this.piece.x-=2;
                                         this.piece.y++;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -366,6 +433,7 @@ class Game{
                                         this.piece.x--;
                                         this.piece.y-=2;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -385,6 +453,7 @@ class Game{
                                         this.piece.x+=2;
                                         this.piece.y--;
                                         this.rotation = prevRotation;
+                                        return false;
                                     }
                                 }
                             }
@@ -392,9 +461,13 @@ class Game{
                         break;
                 }
             }
+
+            drawGame(this);
+            return true;
         }
 
     }
+
 
     collisioncheck(){
         for(var j=0; j<4; j++){
@@ -424,7 +497,10 @@ class Game{
     
                 
                 for(var j=y; j<this.down.length; j++)this.down[j].y++; //przesuwanie wyzszego poziomu w dol
+
+                if(y>=this.down.length)y=this.down.length-1;    //jesli nie bylo elementow powyzej usuwanej lini przesuwamy y
             }
+            
         }
         
         //w przypadku gdy linia zostala usunieta, w zaleznosi od ich ilosci zwiekszamy punkty i poziom
@@ -522,26 +598,25 @@ class Game{
         var pom;
     
         for(var i=0; i<4; i++){
-            for(j=0; j<this.down.length && this.piece.type[this.rotation][i].y+this.piece.y<this.down[j].y; j++);
-    
-            //this.board[this.piece.x + this.piece.type[this.rotation][i].x][this.piece.y + this.piece.type[this.rotation][i].y] = 2; //zaznaczanie pojawienie się nowego elementu na dole
+            for(j=0; j<this.down.length && this.piece.type[this.rotation][i].y+this.piece.y<this.down[j].y; j++); //szukamy wysokosci wiersza w "dole"
     
             pom=new Box(this.piece.type[this.rotation][i].x+this.piece.x, this.piece.type[this.rotation][i].y+this.piece.y, this.piece.type[this.rotation][i].color);
             this.down.splice(j, 0, pom);
         }
         
     }
-
-    drawBoard(){
-        this.ctx.clearRect(0, 0, 10*this.unit, 20*this.unit);
+    //stre rysowanie
+    // drawBoard(){
+    //     ctx.clearRect(0, 0, 10*unit, 20*unit);
     
-        this.piece.draw(this.rotation, this.unit);
+    //     this.piece.draw(this.rotation, unit);
     
-        for(var i=0; i<this.down.length; i++){
-           this.down[i].draw(this.unit);
-        }
-    }
+    //     for(var i=0; i<this.down.length; i++){
+    //        this.down[i].draw(unit);
+    //     }
+    // }
 
+    //sprawdza czy gra się skończyła
     end(){
         for(var i=0; i<4; i++){
             if(this.piece.type[this.rotation][i].y+this.piece.y<=-1)return true;
@@ -550,10 +625,14 @@ class Game{
         return false;
     }
 
+
+    //kończy gre
     gameOver(){
-        clearInterval(this.game);
-        setTimeout(() => {
-            window.alert("GAME OVER")
-        }, 100);
+        clearTimeout();
+        //document.removeEventListener("keydown", direction);
+        this.gameDead = true;
+        // setTimeout(() => {
+        //     window.alert("GAME OVER")
+        // }, 100);
     }
 }
