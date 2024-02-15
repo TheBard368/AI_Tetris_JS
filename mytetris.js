@@ -6,7 +6,7 @@ var learning;
 function setUp(){
     population = new Popultaion(popCount);
     for(var i=0; i<popCount; i++){
-        games.push(new Game(false, i));
+        games.push(new Game(i, false));
         drawGame(games[i]);
     }
     //drawGames(games);
