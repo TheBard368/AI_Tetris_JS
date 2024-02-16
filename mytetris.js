@@ -1,4 +1,4 @@
-const popCount = 6;
+const popCount = 8;
 var games = [];
 var population;
 var learning;

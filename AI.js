@@ -10,6 +10,14 @@ class Phenotype{
         this.pieceCount = 0;
     }
 
+    reset(){
+        this.movePlan = new MoveHistory();
+        this.needsNewMovementPlan = true;
+        this.gameEnded = false;
+        this.boardState = new BoardState();
+        this.pieceCount = 0;
+    }
+
     updateBoardState(game){
         this.boardState.updateMatrix(game);
         this.gameEnded = this.boardState.gameDead;
@@ -234,12 +242,12 @@ class Phenotype{
     randomizeWeights(){
         this.weights = {
             holes: 180*random(0.90, 1.10),
-            chasms: 120*random(0.90, 1.10),
-            bumpiness: 90*random(0.90, 1.10),
-            pillars: 70*random(0.90, 1.10),
-            totalPillarsHeight: 90*random(0.90, 1.10),
-            height: 200*random(0.90, 1.10),
-            tetrised: 120*random(0.90, 1.10)
+            chasms: 150*random(0.90, 1.10),
+            bumpiness: 40*random(0.90, 1.10),
+            pillars: 10*random(0.90, 1.10),
+            totalPillarsHeight: 20*random(0.90, 1.10),
+            height: 120*random(0.90, 1.10),
+            tetrised: 100*random(0.90, 1.10)
             //currentScore: 100,
         }
     }
@@ -286,6 +294,7 @@ class Popultaion{
         var best = this.findBest();
 
         best.mutate();
+        best.reset();
         newGen.push(best);
 
         for(var i=1; i<this.popCount; i++){

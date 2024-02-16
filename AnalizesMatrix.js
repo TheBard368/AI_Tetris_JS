@@ -158,27 +158,23 @@ class BoardState{
                 }else if(foundBlock){ 
                     this.holesDepth += foundBlocksCount;
 
-                    //sprawdzamy czy dziure mozna zapełnić klockiem przez jego przesuniecie w lewo lub w prawo
+                    //sprawdzamy czy dziure mozna zapełnić przez dostawienie klocka z prawej lub lewej
                     if (i < 8) {
                         //sprawdzenie prawej
                         if ((this.analizingMatrix[j][i + 1] == 0 && this.analizingMatrix[j][i + 2] == 0) &&
                             (j == 19 || this.analizingMatrix[i+1][j+1] != 0 )) {
-                            this.chasms++
-                            continue;
+                            this.chasms++;
 
                         } 
                     }
-
-                    if (i >= 2) {
+                    else if (i >= 2) {
                         //sprawdzenie lewej
-                        if ((this.analizingMatrix[j][i - 1] === null && this.analizingMatrix[j][i - 2] == 0) &&
+                        if ((this.analizingMatrix[j][i - 1] == 0 && this.analizingMatrix[j][i - 2] == 0) &&
                             (j == 19 || this.analizingMatrix[i-1][j+1] != 0 )){ 
-                            this.chasms++
-                            continue;
+                            this.chasms++;
                         }
                     }
-
-                    this.holes++;
+                    else this.holes++;
                 }
             }
         }
@@ -198,7 +194,7 @@ class BoardState{
             for(j = 0; j<20 && this.analizingMatrix[j][i]==0; j++);
 
             if(Math.abs(prevHeight-j) > 2){
-                this.pillars++
+                this.pillars++;
                 this.totalPillarsHeight += 20-j;
             }
             if(this.height < j) this.height = 20-j;
@@ -217,7 +213,7 @@ class BoardState{
             for(j = 0; j<20 && this.analizingMatrix[j][i]==0; j++);
 
             if(j != prevHeight){
-                this.bumpiness += Math.abs(i-prevHeight);
+                this.bumpiness += Math.abs(j-prevHeight);
                 prevHeight = j;
             }
             

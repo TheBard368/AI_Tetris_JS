@@ -1,6 +1,8 @@
-const unit=20;
+const unit=20; //unit ma byc wielokrotnocia 2
 const cvs=document.getElementById("board");
 const ctx=cvs.getContext("2d");
+
+ctx.font = "15px Arial";
 
 
 
@@ -14,11 +16,13 @@ function drawBox(box){
 
 function drawPiece(piece, rotation){
     for(var i=0; i<4; i++){
-        ctx.fillStyle=piece.type[rotation][i].color;
-        ctx.fillRect((piece.x+piece.type[rotation][i].x)*unit, (piece.y+piece.type[rotation][i].y)*unit, unit, unit);
+        if(piece.y+piece.type[rotation][i].y>=0){
+            ctx.fillStyle=piece.type[rotation][i].color;
+            ctx.fillRect((piece.x+piece.type[rotation][i].x)*unit, (piece.y+piece.type[rotation][i].y)*unit, unit, unit);
 
-        ctx.strokeStyle="black";
-        ctx.strokeRect((piece.x+piece.type[rotation][i].x)*unit, (piece.y+piece.type[rotation][i].y)*unit, unit, unit);
+            ctx.strokeStyle="black";
+            ctx.strokeRect((piece.x+piece.type[rotation][i].x)*unit, (piece.y+piece.type[rotation][i].y)*unit, unit, unit);
+        }
     }
 }
 
@@ -30,17 +34,42 @@ function drawDown(down){
 
 function drawGame(game){
     ctx.save();
-    ctx.translate(unit*11*game.Id, 0);
+    ctx.translate(unit*18*((game.Id)%4), unit*21*(Math.floor(game.Id/4)));
     ctx.clearRect(0, 0, 10*unit, 20*unit);
 
     drawPiece(game.piece, game.rotation)
     drawDown(game.down);
+    drawNext(game.nextPiece);
+    drawStats(game);
 
     drawGrid();
     ctx.restore();
 }
 
+function drawNext(piece){
+    ctx.clearRect(11*unit, 2*unit, 6*unit, 6*unit);
+    ctx.strokeStyle="black";
+    ctx.strokeRect(11*unit, 2*unit, 6*unit, 6*unit);
+
+    ctx.fillStyle = piece.type[0][0].color;
+    for(var i=0; i<4; i++){
+        ctx.fillRect((13+piece.type[0][i].x)*unit, (5+piece.type[0][i].y)*unit, unit, unit);
+
+        ctx.strokeRect((13+piece.type[0][i].x)*unit, (5+piece.type[0][i].y)*unit, unit, unit);
+    }
+}
+
+function drawStats(game){
+    ctx.clearRect(11*unit, 9*unit, 6*unit, 10*unit);
+    ctx.fillStyle = 'black';
+    ctx.fillText("Level : " + game.level, 11.5*unit, 10*unit);
+    ctx.fillStyle = 'black';
+    ctx.fillText("Score : " + game.score, 11.5*unit, 12*unit);
+
+}
+
 function drawGrid(){
+
     ctx.strokeStyle="black";
     ctx.strokeRect(0, 0, 10*unit, 20*unit);
 
