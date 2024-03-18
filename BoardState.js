@@ -164,17 +164,20 @@ class BoardState{
                         if ((this.analizingMatrix[j][i + 1] == 0 && this.analizingMatrix[j][i + 2] == 0) &&
                             (j == 19 || this.analizingMatrix[i+1][j+1] != 0 )) {
                             this.chasms++;
+                            continue;
 
                         } 
                     }
-                    else if (i >= 2) {
+                    if (i >= 2) {
                         //sprawdzenie lewej
                         if ((this.analizingMatrix[j][i - 1] == 0 && this.analizingMatrix[j][i - 2] == 0) &&
                             (j == 19 || this.analizingMatrix[i-1][j+1] != 0 )){ 
                             this.chasms++;
+                            continue;
                         }
                     }
-                    else this.holes++;
+
+                    this.holes++;
                 }
             }
         }

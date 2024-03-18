@@ -1,7 +1,5 @@
 class Game{
     constructor(id, humanControlled){
-        // this.cvs=document.getElementById(boardname);
-        // this.ctx=this.cvs.getContext("2d");
         if(humanControlled){
             document.addEventListener("keydown", direction);
         }
@@ -17,7 +15,6 @@ class Game{
         this.rotation = 0;
         this.gameDead = false;
         this.pieceCount = 1;
-        //this.analizesMatrix = new BoardState();
     }
 
     generateNextPiece(){
@@ -40,8 +37,8 @@ class Game{
         }
     }
 
-    start(level){
-        this.level = level;
+    start(){
+        //this.level = level;
         this.game = setTimeout(this.play.bind(this), this.droppingSpeed);
     }
 
@@ -68,7 +65,7 @@ class Game{
         this.gameDead = false;
         this.pieceCount = 1;
 
-        this.game = setTimeout(this.play.bind(this), this.droppingSpeed);
+        this.start();
     }
 
     movePieceDown(){
@@ -79,7 +76,7 @@ class Game{
             this.removeLine();
             if(this.end()){
                 this.gameOver();
-                return;
+                return false;
             }
             if(this.piecesSwapped){
                 this.piecesSwapped = false;
@@ -89,6 +86,7 @@ class Game{
            
         }
         drawGame(this);
+        return true;
     }
 
     movePieceLeft(){
@@ -608,16 +606,6 @@ class Game{
         }
         
     }
-    //stre rysowanie
-    // drawBoard(){
-    //     ctx.clearRect(0, 0, 10*unit, 20*unit);
-    
-    //     this.piece.draw(this.rotation, unit);
-    
-    //     for(var i=0; i<this.down.length; i++){
-    //        this.down[i].draw(unit);
-    //     }
-    // }
 
     //sprawdza czy gra się skończyła
     end(){
@@ -637,5 +625,25 @@ class Game{
         // setTimeout(() => {
         //     window.alert("GAME OVER")
         // }, 100);
+    }
+
+    direction(event){
+        switch(event.keyCode){
+            case 37:
+                this.movePieceLeft();
+                break;
+            case 38:
+                this.rotateR();
+                break;
+            case 16:
+                this.rotateL();
+                break;
+            case 39:
+                this.movePieceRight();
+                break;
+            case 0:
+                this.movePieceDown();
+                break;
+        }
     }
 }

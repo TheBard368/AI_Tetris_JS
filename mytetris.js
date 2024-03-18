@@ -9,48 +9,28 @@ function setUp(){
         games.push(new Game(i, false));
         drawGame(games[i]);
     }
-    //drawGames(games);
 
 }
 
 function learn(){
     if(population.allDead()){
         if(population.finalGen == population.generation){
-            clearTimeout(learning);
+            clearInterval(learning);
             return;;
         }
         else{
             population.selection();
             games.forEach(g => g.reset());
+            population.useMoves(games);
         }
     }
     else{
         population.useMoves(games);
     }
-    //drawGames(games);
-
-    learning = setTimeout(learn, 0);
 }
 
 
-// function learn(){
-//     games.forEach(g => g.start(0));
-
-//     while(!(population.allDead() && population.finalGen == population.generation)){
-//         if(population.allDead()){
-//             population.selection();
-//             games.forEach(g => g.reset());
-//         }
-//         else{
-//             population.useMoves(games);
-//         }
-//         //drawGames(games);
-//     }
-// }
-
-
 function direction(event){
-    //deletePiecePosition();
     if(event.keyCode==37){
         game.piece.x--;
         if(game.collisioncheck())game.piece.x++;
@@ -78,5 +58,5 @@ function direction(event){
 
 
 setUp();
-games.forEach(g => g.start(0));
-var learning = setTimeout(learn, 0);
+games.forEach(g => g.start());
+var learning = setInterval(learn, 0);

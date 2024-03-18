@@ -3,7 +3,7 @@ class Phenotype{
         //this.setStartingWeights();
         this.randomizeWeights();
 
-        this.movePlan = new MoveHistory();
+        this.movePlan = new MovePlan();
         this.needsNewMovementPlan = true;
         this.gameEnded = false;
         this.boardState = new BoardState();
@@ -11,7 +11,7 @@ class Phenotype{
     }
 
     reset(){
-        this.movePlan = new MoveHistory();
+        this.movePlan = new MovePlan();
         this.needsNewMovementPlan = true;
         this.gameEnded = false;
         this.boardState = new BoardState();
@@ -69,19 +69,29 @@ class Phenotype{
                 game.swapPiece();
                 break;
             case "rotateR":
-                game.rotateR();
+                if(!game.rotateR()){
+                    console.log("couldn't rotateR");
+                }
                 break;
             case "rotateL":
-                game.rotateL();
+                if(!game.rotateL()){
+                    console.log("couldn't rotateL");
+                }
                 break;
             case "right":
-                game.movePieceRight();
+                if(!game.movePieceRight()){
+                    console.log("couldn't movePieceRight");
+                }
                 break;
             case "left":
-                game.movePieceLeft();
+                if(!game.movePieceLeft()){
+                    console.log("couldn't movePieceLeft");
+                }
                 break;
             case "down":
-                game.movePieceDown();
+                if(!game.movePieceDown()){
+                    console.log("couldn't movePieceDown");
+                }
                 break;
         }
         // if(this.movePlan.length() == 0){
@@ -108,8 +118,6 @@ class Phenotype{
 
             this.movePlan = bestMove.moveHistory.clone();
 
-            // this.movePlan.addMoveDown(); //testowa
-            // this.bestPieceCopy = bestMove.clone();
             this.needsNewMovementPlan = false;
         }
     }

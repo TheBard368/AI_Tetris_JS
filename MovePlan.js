@@ -1,4 +1,4 @@
-class MoveHistory{
+class MovePlan{
     constructor(){
         this.moveList = [];
     }
@@ -28,7 +28,7 @@ class MoveHistory{
     }
 
     clone(){
-        var copy = new MoveHistory();
+        var copy = new MovePlan();
         for(var i = 0; i<this.moveList.length; i++){
             copy.moveList.push("" + this.moveList[i]);
         }

@@ -3,7 +3,7 @@ const cvs=document.getElementById("board");
 const ctx=cvs.getContext("2d");
 
 ctx.font = "15px Arial";
-
+ctx.translate(1,1);
 
 
 function drawBox(box){
@@ -28,14 +28,14 @@ function drawPiece(piece, rotation){
 
 function drawDown(down){
     for(var i=0; i<down.length; i++){
-        down[i].draw(unit);
+        drawBox(down[i]);
      }
 }
 
 function drawGame(game){
     ctx.save();
     ctx.translate(unit*18*((game.Id)%4), unit*21*(Math.floor(game.Id/4)));
-    ctx.clearRect(0, 0, 10*unit, 20*unit);
+    ctx.clearRect(0, 0, 17*unit, 20*unit);
 
     drawPiece(game.piece, game.rotation)
     drawDown(game.down);
@@ -47,7 +47,7 @@ function drawGame(game){
 }
 
 function drawNext(piece){
-    ctx.clearRect(11*unit, 2*unit, 6*unit, 6*unit);
+    //ctx.clearRect(11*unit, 2*unit, 6*unit, 6*unit);
     ctx.strokeStyle="black";
     ctx.strokeRect(11*unit, 2*unit, 6*unit, 6*unit);
 
@@ -60,7 +60,7 @@ function drawNext(piece){
 }
 
 function drawStats(game){
-    ctx.clearRect(11*unit, 9*unit, 6*unit, 10*unit);
+    //ctx.clearRect(11*unit, 9*unit, 6*unit, 10*unit);
     ctx.fillStyle = 'black';
     ctx.fillText("Level : " + game.level, 11.5*unit, 10*unit);
     ctx.fillStyle = 'black';

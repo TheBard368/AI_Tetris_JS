@@ -4,20 +4,23 @@
     <style>
         canvas{
             background-color: rgb(235, 227, 227);
-            position: static;
-            align-self: center;
+            padding: 0;
+            margin: auto;
+            display: block;
         }
     </style>
 </head>
 <body>
-    <canvas id="board" width=2160 height=820></canvas>
+
+    <canvas id="board" width=1441 height=822></canvas>
+
     
 
     <script src="Game.js"></script>
     <script src="Piece.js"></script>
-    <script src="AnalizesMatrix.js"></script>
+    <script src="BoardState.js"></script>
     <script src="CheckedPositions.js"></script>
-    <script src="MoveHistory.js"></script>
+    <script src="MovePlan.js"></script>
     <script src="Ai.js"></script>
     <script src="Draw.js"></script>
     <script src="mytetris.js"></script>

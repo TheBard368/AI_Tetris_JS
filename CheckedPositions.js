@@ -35,7 +35,7 @@ class PieceVM{
         this.y = y;
         this.type = type;
         this.rotation = 0;
-        this.moveHistory = new MoveHistory();
+        this.moveHistory = new MovePlan();
     }
 
     //RUCHY ZMIENIAJĄ POLOŻENIE I ZWRACAJA POMYSLONSC RUCHU

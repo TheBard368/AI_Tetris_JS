@@ -5,13 +5,13 @@ class Box{
         this.color=color;
     }
 
-    draw(unit){
-        ctx.fillStyle=this.color;
-        ctx.fillRect(this.x*unit, this.y*unit, unit, unit);
+    // draw(unit){
+    //     ctx.fillStyle=this.color;
+    //     ctx.fillRect(this.x*unit, this.y*unit, unit, unit);
 
-        ctx.strokeStyle="black";
-        ctx.strokeRect(this.x*unit, this.y*unit, unit, unit);
-    } 
+    //     ctx.strokeStyle="black";
+    //     ctx.strokeRect(this.x*unit, this.y*unit, unit, unit);
+    // } 
 
 }
 //to do: dodac ,funkcje zwiekszajace przejrzystosc kodu np. zwracajaca pozycje konkretnego bloku
@@ -23,16 +23,16 @@ class Piece{
     }
 
 
-    draw(rotation, unit){
+    // draw(rotation, unit){
         
-        for(var i=0; i<4; i++){
-            ctx.fillStyle=this.type[rotation][i].color;
-            ctx.fillRect((this.x+this.type[rotation][i].x)*unit, (this.y+this.type[rotation][i].y)*unit, unit, unit);
+    //     for(var i=0; i<4; i++){
+    //         ctx.fillStyle=this.type[rotation][i].color;
+    //         ctx.fillRect((this.x+this.type[rotation][i].x)*unit, (this.y+this.type[rotation][i].y)*unit, unit, unit);
 
-            ctx.strokeStyle="black";
-            ctx.strokeRect((this.x+this.type[rotation][i].x)*unit, (this.y+this.type[rotation][i].y)*unit, unit, unit);
-        }
-    }
+    //         ctx.strokeStyle="black";
+    //         ctx.strokeRect((this.x+this.type[rotation][i].x)*unit, (this.y+this.type[rotation][i].y)*unit, unit, unit);
+    //     }
+    // }
 
     clone(){
         var piece = new Piece(this.x, this.y, this.type);
