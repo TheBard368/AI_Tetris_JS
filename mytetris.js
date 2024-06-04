@@ -29,32 +29,30 @@ function learn(){
     }
 }
 
+function mode(event){
+    switch(event.keyCode){
+        case 65 :   // a
+            break;
+        case 83 :   // s
+            break;
+    }
+}
+
 
 function direction(event){
     if(event.keyCode==37){
-        game.piece.x--;
-        if(game.collisioncheck())game.piece.x++;
-    }else if(event.keyCode==38){
+        game.movePieceLeft();
+    }else if(event.keyCode==76){    // l
         game.rotateR();
+    }else if(event.keyCode==75){    // k
+        game.rotateL();     
     }else if(event.keyCode==39){
-        game.piece.x++;
-        if(game.collisioncheck())game.piece.x--;
+        game.movePieceRight();
     }else if(event.keyCode==40){
-        game.piece.y++;
-        if(game.collisioncheck()){
-            game.piece.y--;
-            game.addDown();
-            game.removeLine();
-            if(game.end()){
-                game.gameOver();
-            }else{
-                game.generateNextPiece();
-            }
-        }
+        game.movePieceDown();
     }
-    game.drawBoard();
-    //refreshPiecePosition();
 }
+
 
 
 setUp();

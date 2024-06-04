@@ -15,6 +15,7 @@ class Game{
         this.rotation = 0;
         this.gameDead = false;
         this.pieceCount = 1;
+        this.paused = true;
     }
 
     generateNextPiece(){
@@ -39,6 +40,7 @@ class Game{
 
     start(){
         //this.level = level;
+        this.pause = false;
         this.game = setTimeout(this.play.bind(this), this.droppingSpeed);
     }
 
@@ -52,7 +54,13 @@ class Game{
         this.game = setTimeout(this.play.bind(this), this.droppingSpeed);
     }
 
+    pause(){
+        this.paused = true;
+        clearInterval();
+    }
+
     reset(){
+        clearTimeout();
         this.score = 0;
         this.level = 0;
         this.droppingSpeed = 800;

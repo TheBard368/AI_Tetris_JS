@@ -8,6 +8,7 @@ class Phenotype{
         this.gameEnded = false;
         this.boardState = new BoardState();
         this.pieceCount = 0;
+        this.selectionValue = 0;
     }
 
     reset(){
@@ -225,6 +226,7 @@ class Phenotype{
             height: 100,
             tetrised: 100
             //currentScore: 100,
+            
         }
     }
 
@@ -240,11 +242,35 @@ class Phenotype{
         child.weights.holes = choseRandom(p1.weights.holes, p2.weights.holes);
         child.weights.pillars = choseRandom(p1.weights.pillars, p2.weights.pillars);
         child.weights.totalPillarsHeight = choseRandom(p1.weights.totalPillarsHeight, p2.weights.totalPillarsHeight);
-        child.weights.currentScore = choseRandom(p1.weights.currentScore, p2.weights.currentScore);
+        child.weights.height = choseRandom(p1.weights.height, p2.weights.height);
+        child.weights.tetrised = choseRandom(p1.weights.tetrised, p2.weights.tetrised);
+        //child.weights.currentScore = choseRandom(p1.weights.currentScore, p2.weights.currentScore);
 
         child.mutate();
 
         return child;
+    }
+
+    static createChild2(p1, p2){
+        var child1 = new Phenotype();
+        var child2 = new Phenotype();
+
+        var point = Math.floor(Math.random()*7); // bo jest 6 wag
+
+        for(var i=0; i<point; i++){
+            child1.weights[weightsNames[i]] = p1.weights[weightsNames[i]];
+            child2.weights[weightsNames[i]] = p2.weights[weightsNames[i]];
+        }
+
+        for(var i=point; i<7; i++){
+            child1.weights[weightsNames[i]] = p2.weights[weightsNames[i]];
+            child2.weights[weightsNames[i]] = p1.weights[weightsNames[i]];
+        }
+
+        child1.mutate();
+        child2.mutate();
+
+        return [child1, child2];
     }
 
     randomizeWeights(){
@@ -296,6 +322,42 @@ class Popultaion{
         return best;
     }
 
+    selection2(){
+        var newGen = [];
+
+        var selectTab = []
+        selectTab.push(this.phenotypes[0]);
+        var indexSwap;
+
+        for(var i=1; i<this.popCount/2; i++){
+            indexSwap=-1;
+            for(var j=0; j<selectTab.length; j++){
+                if(this.phenotypes[i].getFittnes() > selectTab[j].getFittnes()){
+                    indexSwap = j;
+                }
+            }
+
+            if(indexSwap>0){
+                selectTab.splice(indexSwap, 0, this.phenotypes[i]);
+                if(selectTab.length>this.popCount/2){
+                    selectTab.splice(0, 1);
+                }
+            }
+        }
+
+        for(var i=1; i<this.popCount; i++){
+            newGen.push(Phenotype.createChild(best, this.phenotypes[i])); //wstępne krzyżowanie
+        }
+
+        for(var i=1; i<this.popCount; i++){
+            this.phenotypes.pop();
+        }
+
+        this.phenotypes = newGen;
+        this.generation++;
+
+    }
+
     selection(){
         var newGen = [];
 
@@ -307,6 +369,10 @@ class Popultaion{
 
         for(var i=1; i<this.popCount; i++){
             newGen.push(Phenotype.createChild(best, this.phenotypes[i])); //wstępne krzyżowanie
+        }
+
+        for(var i=1; i<this.popCount; i++){
+            this.phenotypes.pop();
         }
 
         this.phenotypes = newGen;
@@ -363,3 +429,5 @@ function choseRandom(a, b){
 function random(a, b){
     return Math.floor(Math.random()*((a-b+1)+a)*10000)/10000;
 }
+
+const weightsNames = ['bumpinnes', 'chasms', 'holes', 'pillars', 'totalPillarsHeight', 'height', 'tetrised'];
