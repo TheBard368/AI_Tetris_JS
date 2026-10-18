@@ -1,30 +1,191 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Tetris JS</title>
     <style>
+        body{
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f1f1;
+            color: #222;
+        }
         canvas{
             background-color: rgb(235, 227, 227);
             padding: 0;
             margin: auto;
             display: block;
         }
+        button, select, input{
+            font: inherit;
+        }
+        button{
+            padding: 6px 12px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+        }
+        button:hover:not(:disabled){
+            background: #eee;
+        }
+        button:disabled{
+            opacity: 0.5;
+            cursor: default;
+        }
+        button.primary{
+            background: #2d6cdf;
+            border-color: #2d6cdf;
+            color: #fff;
+        }
+        button.primary:hover:not(:disabled){
+            background: #2457b5;
+        }
+
+        /* --- pasek stanu nad planszami --- */
+        #status{
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 20px;
+            padding: 8px 16px;
+            background: #fff;
+            border-bottom: 1px solid #ccc;
+        }
+        #status .spacer{
+            flex: 1;
+        }
+        #statusMessage{
+            color: #1f7a3a;
+            font-weight: bold;
+        }
+
+        /* --- menu startowe --- */
+        #menu{
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.45);
+            padding: 16px;
+            overflow-y: auto;
+        }
+        #menu .panel{
+            background: #fff;
+            border-radius: 8px;
+            padding: 24px;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+        #menu h1{
+            margin: 0 0 4px;
+        }
+        #menu h2{
+            font-size: 1.1em;
+            margin: 20px 0 8px;
+        }
+        #menu p{
+            margin: 0 0 12px;
+            color: #555;
+        }
+        #menu label{
+            display: block;
+            margin-bottom: 12px;
+        }
+        #menu input[type=number]{
+            width: 80px;
+            margin-left: 8px;
+        }
+        #menu select{
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        #menu .row{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        #savedInfo{
+            font-size: 0.85em;
+            background: #f6f6f6;
+            border-radius: 4px;
+            padding: 8px;
+            white-space: pre-wrap;
+            font-family: Consolas, monospace;
+        }
+        .hidden{
+            display: none !important;
+        }
     </style>
 </head>
 <body>
 
+    <!-- pasek stanu widoczny podczas treningu / pokazu -->
+    <div id="status" class="hidden">
+        <strong id="statusMode"></strong>
+        <span id="statusGeneration"></span>
+        <span id="statusAlive"></span>
+        <span id="statusBest"></span>
+        <span id="statusMessage"></span>
+        <span class="spacer"></span>
+        <label>Szybkość:
+            <select id="speedSelect">
+                <option value="1">x1</option>
+                <option value="2">x2</option>
+                <option value="5">x5</option>
+                <option value="10">x10</option>
+                <option value="25">x25</option>
+            </select>
+        </label>
+        <button id="btnStatusExport">Eksportuj zapisy</button>
+        <button id="btnMenu">Menu</button>
+    </div>
+
     <canvas id="board" width=1441 height=822></canvas>
 
-    
+    <!-- menu startowe -->
+    <div id="menu">
+        <div class="panel">
+            <h1>AI Tetris JS</h1>
+            <p>Algorytm genetyczny uczy sztuczną inteligencję grać w Tetrisa. Najlepszy osobnik każdej epoki jest zapisywany w przeglądarce.</p>
 
+            <label>Liczba epok (generacji) treningu, 0 = bez limitu:
+                <input id="generationsInput" type="number" min="0" value="10">
+            </label>
+            <button id="btnNew" class="primary">Nowy trening od początku</button>
+
+            <h2>Zapisane epoki</h2>
+            <p id="storageWarning" class="hidden">Zapis w przeglądarce jest niedostępny – użyj eksportu/importu pliku.</p>
+            <select id="savedSelect"></select>
+            <div id="savedInfo">Brak zapisanych epok.</div>
+            <div class="row">
+                <button id="btnContinue">Kontynuuj trening z wybranego modelu</button>
+                <button id="btnDemo">Pokaż grę wybranego modelu</button>
+            </div>
+            <div class="row">
+                <button id="btnImport">Importuj z pliku</button>
+                <button id="btnExport">Eksportuj do pliku</button>
+                <button id="btnClear">Usuń zapisy</button>
+                <input id="importFile" type="file" accept=".json,application/json" class="hidden">
+            </div>
+        </div>
+    </div>
+
+    <!-- kolejność ma znaczenie: AI.js definiuje WEIGHT_NAMES używane w Storage.js,
+         a Draw.js musi być wczytany po elemencie canvas -->
     <script src="Game.js"></script>
     <script src="Piece.js"></script>
     <script src="BoardState.js"></script>
     <script src="CheckedPositions.js"></script>
     <script src="MovePlan.js"></script>
-    <script src="Ai.js"></script>
+    <script src="AI.js"></script>
+    <script src="Storage.js"></script>
     <script src="Draw.js"></script>
     <script src="mytetris.js"></script>
-    
 
 </body>
 </html>

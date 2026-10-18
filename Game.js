@@ -1,30 +1,59 @@
+/**
+ * Game.js – logika pojedynczej gry w Tetrisa (plansza 10 x 20).
+ *
+ * Stan planszy:
+ *  - this.piece / this.rotation – spadający klocek i jego obrót (0-3),
+ *  - this.nextPiece – następny klocek (można go zamienić z bieżącym raz na klocek: swapPiece),
+ *  - this.down – tablica bloków (Box), które już leżą na planszy, posortowana malejąco po y
+ *    (od dołu planszy do góry).
+ * Klocek opada samoczynnie co `droppingSpeed` ms (setTimeout), niezależnie od ruchów AI.
+ * Każda zmiana stanu jest od razu rysowana (drawGame z Draw.js).
+ */
+
+//losuje nowy klocek w pozycji startowej
+function randomPiece(){
+    return new Piece(4, -1, Tetrominos[Math.floor(Math.random()*Tetrominos.length)]);
+}
+
 class Game{
+    /**
+     * @param {number} id numer gry – decyduje o miejscu planszy na canvasie
+     * @param {boolean} humanControlled true = sterowanie klawiaturą (strzałki, góra/Shift = obrót)
+     */
     constructor(id, humanControlled){
         if(humanControlled){
-            document.addEventListener("keydown", direction);
+            document.addEventListener("keydown", this.direction.bind(this));
         }
         this.Id = id;
+        this.game = null;   // uchwyt timera opadania klocka
+        this.paused = true;
+        this.initState();
+    }
+
+    //ustawia stan początkowy gry (wspólne dla konstruktora i reset)
+    initState(){
         this.score = 0;
         this.level = 0;
         this.droppingSpeed = 800;
         this.amoutOfLinesCleared = 0;
         this.down=[];
-        this.piece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
-        this.nextPiece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
+        this.piece = randomPiece();
+        this.nextPiece = randomPiece();
         this.piecesSwapped = false;
         this.rotation = 0;
         this.gameDead = false;
         this.pieceCount = 1;
-        this.paused = true;
     }
 
+    //bieżącym klockiem staje się następny, losujemy nowy następny
     generateNextPiece(){
         this.rotation = 0;
         this.pieceCount++;
         this.piece = this.nextPiece;
-        this.nextPiece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
+        this.nextPiece = randomPiece();
     }
 
+    //zamiana bieżącego klocka z następnym (dozwolona raz na każdy klocek)
     swapPiece(){
         if(!this.piecesSwapped){
             var pom = this.piece;
@@ -38,15 +67,17 @@ class Game{
         }
     }
 
+    //uruchamia samoczynne opadanie klocka
     start(){
-        //this.level = level;
-        this.pause = false;
+        // poprawka: wcześniej było `this.pause = false`, co nadpisywało metodę pause()
+        clearTimeout(this.game);
+        this.paused = false;
         this.game = setTimeout(this.play.bind(this), this.droppingSpeed);
     }
 
-
+    //jeden krok timera – klocek opada o jedno pole
     play(){
-        if(this.gameDead) return;
+        if(this.gameDead || this.paused) return;
 
         this.movePieceDown();
         if(this.gameDead) return;
@@ -54,28 +85,23 @@ class Game{
         this.game = setTimeout(this.play.bind(this), this.droppingSpeed);
     }
 
+    //zatrzymuje samoczynne opadanie klocka
     pause(){
         this.paused = true;
-        clearInterval();
+        // poprawka: clearInterval()/clearTimeout() bez argumentu niczego nie zatrzymywało
+        clearTimeout(this.game);
     }
 
+    //nowa gra na tej samej planszy
     reset(){
-        clearTimeout();
-        this.score = 0;
-        this.level = 0;
-        this.droppingSpeed = 800;
-        this.amoutOfLinesCleared = 0;
-        this.down=[];
-        this.piece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
-        this.nextPiece = new Piece(4, -1, Tetrominos[Math.floor(Math.random()*7)]);
-        this.piecesSwapped = false;
-        this.rotation = 0;
-        this.gameDead = false;
-        this.pieceCount = 1;
-
+        // poprawka: bez podania uchwytu stary timer działał dalej i po każdym resecie
+        // przybywało timerów – klocki opadały coraz szybciej
+        clearTimeout(this.game);
+        this.initState();
         this.start();
     }
 
+    //przesuwa klocek w dół; gdy nie może – blokuje go, usuwa pełne linie i losuje nowy klocek
     movePieceDown(){
         this.piece.y++;
         if(this.collisioncheck()){
@@ -97,6 +123,7 @@ class Game{
         return true;
     }
 
+    //ruchy w bok zwracają false, gdy ruch jest niemożliwy
     movePieceLeft(){
         this.piece.x--;
         if(this.collisioncheck()){
@@ -120,6 +147,11 @@ class Game{
     }
 
 
+    /**
+     * Obrót w lewo. Gdy obrócony klocek koliduje, próbujemy kolejnych przesunięć
+     * ("wall kicków") według Super Rotation System – osobna tabela dla klocka I (linTetr).
+     * Gdy żadne przesunięcie nie pomaga, klocek wraca do stanu sprzed obrotu i zwracamy false.
+     */
     rotateL(){
         var prevRotation = this.rotation;
         this.rotation--;
@@ -298,6 +330,7 @@ class Game{
         return true;
     }
 
+    //obrót w prawo – analogicznie do rotateL
     rotateR(){
         var prevRotation = this.rotation;
         this.rotation++;
@@ -478,41 +511,43 @@ class Game{
     }
 
 
+    //true = bieżący klocek wychodzi poza planszę (bok/dół) lub nachodzi na leżące bloki
     collisioncheck(){
         for(var j=0; j<4; j++){
-            if(this.piece.type[this.rotation][j].x+this.piece.x<0 || this.piece.type[this.rotation][j].x+this.piece.x>9 || this.piece.type[this.rotation][j].y+this.piece.y>19) return true;
-    
+            var x = this.piece.type[this.rotation][j].x + this.piece.x;
+            var y = this.piece.type[this.rotation][j].y + this.piece.y;
+
+            if(x<0 || x>9 || y>19) return true;
+
             for(var i=0; i< this.down.length; i++){
-                if(this.piece.type[this.rotation][j].x+this.piece.x==this.down[i].x && this.piece.type[this.rotation][j].y+this.piece.y==this.down[i].y)return true;
+                if(x==this.down[i].x && y==this.down[i].y) return true;
             }
         }
         return false;
     }
 
+    /**
+     * Usuwa pełne linie, przesuwa wyższe bloki w dół, nalicza punkty i poziom.
+     * Poprawka: poprzednia wersja (liczenie bloków o tym samym y "w ciągu") gubiła drugą
+     * i kolejne pełne linie, gdy nad usuwaną linią nie było już żadnych bloków.
+     */
     removeLine(){
-        var count=0, y=this.down.length-1, linescleared=0;
+        //liczymy bloki w każdym wierszu
+        var rowCounts = {};
+        this.down.forEach(box => rowCounts[box.y] = (rowCounts[box.y] || 0) + 1);
 
-        //petla czysci pelne linie i usuwa je z pamieci
-        for(var i=this.down.length-1; i>=0; i--){
-            if(this.down[i].y!=this.down[y].y){
-                count=1;
-                y=i;
-            }else count++;
-    
-            if(count==10){
-                linescleared++;
-                y-=9;
-                this.down.splice(y, 10);
-    
-                
-                for(var j=y; j<this.down.length; j++)this.down[j].y++; //przesuwanie wyzszego poziomu w dol
+        var fullRows = Object.keys(rowCounts).filter(y => rowCounts[y] == 10).map(Number);
+        var linescleared = fullRows.length;
 
-                if(y>=this.down.length)y=this.down.length-1;    //jesli nie bylo elementow powyzej usuwanej lini przesuwamy y
-            }
-            
+        if(linescleared > 0){
+            //usuwamy bloki z pełnych linii, a pozostałe przesuwamy w dół o liczbę usuniętych linii pod nimi
+            //(kolejność tablicy - malejąco po y - zostaje zachowana)
+            this.down = this.down.filter(box => rowCounts[box.y] != 10);
+            this.down.forEach(box => box.y += fullRows.filter(row => row > box.y).length);
         }
-        
+
         //w przypadku gdy linia zostala usunieta, w zaleznosi od ich ilosci zwiekszamy punkty i poziom
+        //(punktacja jak w oryginalnym Tetrisie na NES)
         switch(linescleared){
             default :
                 break;
@@ -602,6 +637,7 @@ class Game{
     
     }
 
+    //zapisuje bloki zablokowanego klocka do this.down (z zachowaniem sortowania malejąco po y)
     addDown(){
         var j;
         var pom;
@@ -615,7 +651,7 @@ class Game{
         
     }
 
-    //sprawdza czy gra się skończyła
+    //sprawdza czy gra się skończyła (zablokowany klocek wystaje ponad planszę)
     end(){
         for(var i=0; i<4; i++){
             if(this.piece.type[this.rotation][i].y+this.piece.y<=-1)return true;
@@ -627,30 +663,32 @@ class Game{
 
     //kończy gre
     gameOver(){
-        clearTimeout();
-        //document.removeEventListener("keydown", direction);
+        clearTimeout(this.game);
         this.gameDead = true;
-        // setTimeout(() => {
-        //     window.alert("GAME OVER")
-        // }, 100);
+        drawGame(this);  // odświeżamy planszę, by pokazać napis o końcu gry
     }
 
+    //sterowanie klawiaturą (tylko dla gry z humanControlled = true)
     direction(event){
+        if(this.gameDead) return;
         switch(event.keyCode){
-            case 37:
+            case 37:    // strzałka w lewo
                 this.movePieceLeft();
                 break;
-            case 38:
+            case 38:    // strzałka w górę
                 this.rotateR();
                 break;
-            case 16:
+            case 16:    // Shift
                 this.rotateL();
                 break;
-            case 39:
+            case 39:    // strzałka w prawo
                 this.movePieceRight();
                 break;
-            case 0:
+            case 40:    // strzałka w dół (poprawka: wcześniej był kod 0, który nie istnieje)
                 this.movePieceDown();
+                break;
+            case 67:    // C - zamiana z następnym klockiem
+                this.swapPiece();
                 break;
         }
     }

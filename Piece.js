@@ -1,20 +1,21 @@
+/**
+ * Piece.js – klocki (tetromina) i ich kształty.
+ *
+ * Każdy kształt to tablica 4 obrotów, a każdy obrót to 4 bloki (Box) z przesunięciem
+ * względem punktu obrotu klocka (piece.x, piece.y). Oś y rośnie w dół planszy,
+ * więc ujemne y oznacza bloki powyżej punktu obrotu.
+ */
+
+//pojedynczy kwadrat planszy (część klocka albo blok leżący na dnie)
 class Box{
     constructor(x, y , color){
         this.x=x;
         this.y=y;
         this.color=color;
     }
-
-    // draw(unit){
-    //     ctx.fillStyle=this.color;
-    //     ctx.fillRect(this.x*unit, this.y*unit, unit, unit);
-
-    //     ctx.strokeStyle="black";
-    //     ctx.strokeRect(this.x*unit, this.y*unit, unit, unit);
-    // } 
-
 }
-//to do: dodac ,funkcje zwiekszajace przejrzystosc kodu np. zwracajaca pozycje konkretnego bloku
+
+//klocek w grze: pozycja punktu obrotu + kształt (jedna z tablic z Tetrominos)
 class Piece{
     constructor(x, y, type){
         this.x = x;
@@ -22,25 +23,12 @@ class Piece{
         this.type = type;
     }
 
-
-    // draw(rotation, unit){
-        
-    //     for(var i=0; i<4; i++){
-    //         ctx.fillStyle=this.type[rotation][i].color;
-    //         ctx.fillRect((this.x+this.type[rotation][i].x)*unit, (this.y+this.type[rotation][i].y)*unit, unit, unit);
-
-    //         ctx.strokeStyle="black";
-    //         ctx.strokeRect((this.x+this.type[rotation][i].x)*unit, (this.y+this.type[rotation][i].y)*unit, unit, unit);
-    //     }
-    // }
-
     clone(){
-        var piece = new Piece(this.x, this.y, this.type);
-        return piece;
+        return new Piece(this.x, this.y, this.type);
     }
 }
 
-//klocki
+//kształty klocków (obroty 0 -> 1 -> 2 -> 3 to kolejne obroty w prawo)
 
 const tTetr=[
     [new Box(-1, -1, "violet"), new Box(0, -1, "violet"), new Box(1, -1, "violet"), new Box(0, -2, "violet")],
@@ -92,4 +80,5 @@ const linTetr=[
     [new Box(0, -2, "gold"), new Box(0, -1, "gold"), new Box(0, 0, "gold"), new Box(0, 1, "gold")]
 ];
 
+//wszystkie typy klocków – losowane w Game.js
 const Tetrominos=[tTetr, lTetr, rlTetr, sqTetr, zTetr, rzTetr, linTetr];

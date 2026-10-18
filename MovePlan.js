@@ -1,8 +1,15 @@
+/**
+ * MovePlan.js – kolejka ruchów do wykonania przez AI.
+ *
+ * PieceVM zapisuje tu każdy wykonany na próbę ruch, a po wybraniu najlepszej pozycji
+ * Phenotype pobiera z planu po jednym ruchu na takt i wykonuje go w prawdziwej grze.
+ * Możliwe ruchy: "left", "right", "down", "rotateR", "rotateL", "swap".
+ */
 class MovePlan{
     constructor(){
         this.moveList = [];
     }
-    
+
     addMoveLeft(){
         this.moveList.push("left");
     }
@@ -23,21 +30,20 @@ class MovePlan{
         this.moveList.push("rotateL");
     }
 
+    //zamiana klocków zawsze musi być pierwszym ruchem, dlatego trafia na początek kolejki
     addSwap(){
         this.moveList.unshift("swap");
     }
 
     clone(){
         var copy = new MovePlan();
-        for(var i = 0; i<this.moveList.length; i++){
-            copy.moveList.push("" + this.moveList[i]);
-        }
-
+        copy.moveList = this.moveList.slice();
         return copy;
     }
 
+    //zdejmuje i zwraca pierwszy ruch z kolejki (undefined, gdy kolejka jest pusta)
     getMove(){
-        return this.moveList.splice(0, 1)[0];
+        return this.moveList.shift();
     }
 
     length(){

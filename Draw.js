@@ -1,9 +1,17 @@
-const unit=20; //unit ma byc wielokrotnocia 2
+/**
+ * Draw.js – rysowanie gier na canvasie.
+ *
+ * Na jednym canvasie rysowanych jest 8 gier w układzie 4 kolumny x 2 wiersze.
+ * Każda gra zajmuje 18 x 21 jednostek: plansza 10 x 20 + panel z następnym klockiem i statystykami.
+ */
+
+const unit=20; //rozmiar jednego pola w pikselach (wielokrotność 2)
+const GAMES_PER_ROW = 4;
 const cvs=document.getElementById("board");
 const ctx=cvs.getContext("2d");
 
 ctx.font = "15px Arial";
-ctx.translate(1,1);
+ctx.translate(1,1);     // przesunięcie o 1px, żeby krawędzie planszy nie były ucięte
 
 
 function drawBox(box){
@@ -14,30 +22,34 @@ function drawBox(box){
     ctx.strokeRect(box.x*unit, box.y*unit, unit, unit);
 }
 
+//rysuje spadający klocek (pomija bloki znajdujące się jeszcze nad planszą)
 function drawPiece(piece, rotation){
     for(var i=0; i<4; i++){
-        if(piece.y+piece.type[rotation][i].y>=0){
-            ctx.fillStyle=piece.type[rotation][i].color;
-            ctx.fillRect((piece.x+piece.type[rotation][i].x)*unit, (piece.y+piece.type[rotation][i].y)*unit, unit, unit);
+        var box = piece.type[rotation][i];
+        if(piece.y+box.y>=0){
+            ctx.fillStyle=box.color;
+            ctx.fillRect((piece.x+box.x)*unit, (piece.y+box.y)*unit, unit, unit);
 
             ctx.strokeStyle="black";
-            ctx.strokeRect((piece.x+piece.type[rotation][i].x)*unit, (piece.y+piece.type[rotation][i].y)*unit, unit, unit);
+            ctx.strokeRect((piece.x+box.x)*unit, (piece.y+box.y)*unit, unit, unit);
         }
     }
 }
 
+//rysuje bloki leżące na dnie planszy
 function drawDown(down){
     for(var i=0; i<down.length; i++){
         drawBox(down[i]);
-     }
+    }
 }
 
+//rysuje całą grę w jej miejscu na canvasie (miejsce zależy od game.Id)
 function drawGame(game){
     ctx.save();
-    ctx.translate(unit*18*((game.Id)%4), unit*21*(Math.floor(game.Id/4)));
+    ctx.translate(unit*18*(game.Id%GAMES_PER_ROW), unit*21*Math.floor(game.Id/GAMES_PER_ROW));
     ctx.clearRect(0, 0, 17*unit, 20*unit);
 
-    drawPiece(game.piece, game.rotation)
+    drawPiece(game.piece, game.rotation);
     drawDown(game.down);
     drawNext(game.nextPiece);
     drawStats(game);
@@ -46,8 +58,8 @@ function drawGame(game){
     ctx.restore();
 }
 
+//podgląd następnego klocka
 function drawNext(piece){
-    //ctx.clearRect(11*unit, 2*unit, 6*unit, 6*unit);
     ctx.strokeStyle="black";
     ctx.strokeRect(11*unit, 2*unit, 6*unit, 6*unit);
 
@@ -60,14 +72,19 @@ function drawNext(piece){
 }
 
 function drawStats(game){
-    //ctx.clearRect(11*unit, 9*unit, 6*unit, 10*unit);
     ctx.fillStyle = 'black';
-    ctx.fillText("Level : " + game.level, 11.5*unit, 10*unit);
-    ctx.fillStyle = 'black';
-    ctx.fillText("Score : " + game.score, 11.5*unit, 12*unit);
+    ctx.fillText("Gra #" + (game.Id + 1), 11.5*unit, 1.2*unit);
+    ctx.fillText("Poziom : " + game.level, 11.5*unit, 10*unit);
+    ctx.fillText("Wynik : " + game.score, 11.5*unit, 12*unit);
+    ctx.fillText("Klocki : " + game.pieceCount, 11.5*unit, 14*unit);
 
+    if(game.gameDead){
+        ctx.fillStyle = 'firebrick';
+        ctx.fillText("KONIEC GRY", 11.5*unit, 17*unit);
+    }
 }
 
+//siatka planszy 10 x 20
 function drawGrid(){
 
     ctx.strokeStyle="black";
@@ -87,15 +104,3 @@ function drawGrid(){
         ctx.stroke();
     }
 }
-
-// function drawGames(games){
-//     ctx.clearRect(0, 0, 11*unit*games.length, 20*unit);
-//     ctx.save();
-
-//     games.forEach(g => {
-//         drawGame(g)
-//         ctx.translate(unit*11, 0);
-//     });
-
-//     ctx.restore();
-// }

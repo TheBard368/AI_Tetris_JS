@@ -1,31 +1,33 @@
+/**
+ * CheckedPositions.js – narzędzia do przeszukiwania możliwych ruchów przez AI.
+ *
+ *  - CheckedPositions – zbiór pozycji (x, y, obrót) odwiedzonych już w trakcie BFS,
+ *  - PieceVM – "wirtualny" klocek poruszany po kopii planszy (BoardState), który zapamiętuje
+ *    historię swoich ruchów (MovePlan). Zasady ruchu i obrotów (wall kicki SRS) są identyczne
+ *    jak w Game.js, więc zaplanowana sekwencja da się odtworzyć w prawdziwej grze.
+ */
+
 class CheckedPositions{
-    constructor(boardState){
-        this.boardState = boardState;
-
-        this.checkedPositions = [];
-        this.setAllToFalse();
+    /**
+     * Poprawka: wcześniej pozycje mapowano na indeks x + 10*(y+1) + 210*r w tablicy 840 elementów.
+     * Dla x < 0 lub x > 9 (możliwe, bo x to środek klocka, a nie jego lewa krawędź) oraz dla
+     * y > 19 indeksy nachodziły na siebie i część pozycji była błędnie uznawana za sprawdzoną.
+     * Teraz używamy zbioru Set z kluczem tekstowym – każda pozycja ma unikalny klucz.
+     */
+    constructor(){
+        this.checkedPositions = new Set();
     }
 
-    //dla macierzy testowych sprawdza pozycje elemntu, czy jest wolne
-
-
-    getIndexOfCoordinates(x,y,r){
-        return x + 10*(y+1)  + 210*r;
-    }
-
-    setAllToFalse(){
-        this.checkedPositions = [];
-        for (let i = 0; i < 840; i++) {
-            this.checkedPositions.push(false);
-        }
+    static key(x, y, r){
+        return x + "," + y + "," + r;
     }
 
     hasPositionBeenChecked(x, y, r) {
-        return this.checkedPositions[this.getIndexOfCoordinates(x,y,r)];
+        return this.checkedPositions.has(CheckedPositions.key(x, y, r));
     }
 
-    setCheckedPositionsArrayValue(x, y, r, value) {
-        this.checkedPositions[this.getIndexOfCoordinates(x,y,r)] = value;
+    setChecked(x, y, r) {
+        this.checkedPositions.add(CheckedPositions.key(x, y, r));
     }
 }
 
@@ -35,10 +37,12 @@ class PieceVM{
         this.y = y;
         this.type = type;
         this.rotation = 0;
-        this.moveHistory = new MovePlan();
+        this.moveHistory = new MovePlan();  // ruchy prowadzące od pozycji startowej do bieżącej
     }
 
-    //RUCHY ZMIENIAJĄ POLOŻENIE I ZWRACAJA POMYSLONSC RUCHU
+    // RUCHY ZMIENIAJĄ POŁOŻENIE I ZWRACAJĄ MOŻLIWOŚĆ RUCHU (true = ruch wykonany i zapisany w historii)
+
+    //obrót w lewo z próbą "wall kicków" (Super Rotation System)
     rotateL(analizesMatrix){
         var prevRotation = this.rotation;
         this.rotation--;
@@ -216,6 +220,7 @@ class PieceVM{
         return true;
     }
 
+    //obrót w prawo z próbą "wall kicków" (Super Rotation System)
     rotateR(analizesMatrix){
         var prevRotation = this.rotation;
         this.rotation++;
@@ -405,6 +410,7 @@ class PieceVM{
         return true;
     }
 
+    //sprawdza, czy klocek może zjechać niżej (bez zmiany położenia i historii)
     canMoveDown(analizesMatrix){
         this.y++;
         if(!analizesMatrix.isPieceLegal(this)){
@@ -436,6 +442,7 @@ class PieceVM{
         return true;
     }
 
+    //głęboka kopia klocka razem z historią ruchów
     clone(){
         var piece = new PieceVM(this.x, this.y, this.type);
         piece.rotation = this.rotation;
